@@ -1,11 +1,12 @@
 package com.wong.mvpdemo.presenter;
 
-import android.os.Handler;
-import android.os.Looper;
+
 
 import com.wong.mvpdemo.model.IUser;
 import com.wong.mvpdemo.model.UserModelImpl;
 import com.wong.mvpdemo.view.ILoginView;
+
+import java.lang.ref.WeakReference;
 
 /**
  * @author WongKyunban
@@ -15,40 +16,46 @@ import com.wong.mvpdemo.view.ILoginView;
  */
 public class LoginPresenterImpl implements ILoginPresenter {
 
-    private ILoginView iLoginView;
+    /***
+     * 强烈建议不要在presenter中使用Handler
+     */
+
     private IUser user;
-    private Handler handler;
+    /**
+     * 弱引用，可以解决activity内存泄漏问题
+     */
+    private WeakReference<ILoginView> iLoginView;
 
     public LoginPresenterImpl(ILoginView iLoginView) {
-        this.iLoginView = iLoginView;
+        this.iLoginView = new WeakReference<>(iLoginView);
         initUser();
-        handler = new Handler(Looper.getMainLooper());
 
     }
 
     @Override
     public void clear() {
-        iLoginView.onClearText();
+        iLoginView.get().onClearText();
     }
 
     @Override
     public void doLogin(String name, String password) {
         final boolean isSuccess = user.checkLogin(name, password);
 
-        handler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                iLoginView.onLoginResult(isSuccess);
-            }
-        }, 3000);
 
-
+        iLoginView.get().onLoginResult(isSuccess);
     }
 
+    @Override
+    public void onDestroy() {
+        user = null;
+        iLoginView.clear();
+
+    }
 
 
     private void initUser() {
-        user = new UserModelImpl("wongkyunban", "1688");
+        user = new UserModelImpl("test", "1688");
     }
+
 
 }

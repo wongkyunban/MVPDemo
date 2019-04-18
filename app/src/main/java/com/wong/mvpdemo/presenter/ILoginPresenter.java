@@ -12,4 +12,6 @@ public interface ILoginPresenter {
     void clear();
     //登录
     void doLogin(String name, String password);
+    //清理引用
+    void onDestroy();
 }
